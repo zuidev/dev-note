@@ -1,0 +1,46 @@
+
+- Kernel là phần mềm để giao tiếp giữa application và phần cứng máy tính
+
+- Commands
+docker images | docker image ls : list ra tất cả images
+docker pull | docker push : pull/push images từ docker registry
+docker image prune : xóa hết các image có trong máy
+
+docker ps : list running containers
+docker ps -a : list all containers
+docker stop <container_id/name> : stop container
+docker exec <container_id> <command> : chạy 1 câu lệnh trong container (excute)
+docker container prune | docker rm <id> : delete all shutdown containers
+
+- Chạy container cần sự tương tác phía người dùng như shell screen (vd Alpine OS)
+docker run -it alpine : -i là --interactive (keep STDIN open even if not attached), 
+                        -t là --tty (allocate a pseudo-TTY TeleTYpewriter)
+docker run -d alpine : run a container in detach mode, chạy ngầm
+ctr + D : thoát shell terminal nhưng container cũng bị shutdown luôn (bởi vì shell terminal là tiến trình PID 1)
+Ctrl + P + Q : thoát shell terminal mà ko shutdown container (detach container)
+docker attach <container_id> : re-attach container
+- Hoặc dùng ssh để connect tới container
+docker exec -it <container_id> sh : ssh tới container (sẽ tạo ra 1 tiến trình con)
+- Port mapping
+docker run -p [local_port]:[container_port] ... : mapping port thật của máy local tới port của container
+
+- Volume - bind mount
+Gắn container với một volume (vùng nhớ do docker quản lý) để biến container thành stateful, ko mất dữ liệu khi restart
+Syntax
+docker volume create [volume_name] : tạo ra 1 volume ảo để lưu data
+docker run -v [local_dir/volume]:[container_dir] ... : run container với volume flag, giá trị container_dir xem ở docker hub 
+Ex1; 
+docker volume create pgdata
+docker run -v pgdata:/var/lib/postgresql/data -p 5432:5432 postgres
+Ex2;
+docker run -v "C:users\html":/usr/share/nginx/html -p 80:80 nginx
+
+- Dockerfile
+FROM <image> : chỉ định image gốc để tạo image mới từ image gốc đó
+RUN <command> : chạy command trong container
+WORKDIR <directory> : tạo 1 thư mục và đặt thư mục đó làm thư mục gốc khi container được khởi tạo
+COPY <src> <dest> : copy file từ file từ máy local vào image
+ADD <src/URL> <dest> : tương tự copy nhưng có thể tải file từ internet, tự giải nén file
+EXPOSE <port> : thông báo port mà ứng dụng bên trong container đang chạy, như 1 dòng comment
+CMD command argument1 argument2 ... : câu lệnh mồi, được thực thi đầu tiên khi khởi tạo container
+CMD ["command", "argument1", "argument2", ...]  : cách việt exec form (recommend dùng hơn)
